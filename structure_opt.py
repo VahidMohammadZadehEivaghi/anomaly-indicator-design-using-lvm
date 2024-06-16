@@ -40,7 +40,7 @@ def objective(trial, n_input, train_loader, val_loader, params):
     flops = FlopCountAnalysis(model.to(params["device"]), inputs=torch.randn(1, n_input).to(params["device"])).total()
 
     for epoch in range(1, epochs+1):
-        print(f"------------epoch/{epochs}--------------")
+        print(f"------------{epoch}/{epochs}--------------")
         train_loss = train_for_one_epoch(
             model, train_loader, params
         )
