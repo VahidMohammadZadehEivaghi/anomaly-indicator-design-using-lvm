@@ -1,5 +1,7 @@
 from torch import nn
 import torch
+from torch.utils.data import DataLoader
+from typing import Dict
 
 
 class DecompositionLoss(nn.Module):
@@ -38,10 +40,74 @@ class DecompositionLoss(nn.Module):
         return loss
 
 
-if __name__ == "__main__":
-    x = torch.randn(10, 1, 10)
-    n = torch.randn(10, 1, 10)
-    z = torch.randn(10, 1, 10)
-    z_hat = torch.randn(10, 1, 10)
-    loss = DecompositionLoss()
-    print(loss(z_hat=z_hat, z=z, x=x, n=n))
+def train_for_one_epoch(
+        model: nn.Module,
+        train_loader: DataLoader,
+        params: Dict
+):
+    device = params["device"]
+    lr = params["lr"]
+    l1 = params["l1"]
+    l2 = params["l2"]
+    l3 = params["l3"]
+
+    model.to(device)
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+    loss_fn = DecompositionLoss(l1=l1, l2=l2, l3=l3).to(device)
+    running_loss = 0
+    model.train()
+    for batch, input_ in enumerate(train_loader):
+        input_ = input_.to(device)
+
+        # z = x + n
+        z_hat, x, n = model(input_)
+        optimizer.zero_grad(set_to_none=True)
+        loss_value = loss_fn(z_hat=z_hat, z=input_, x=x, n=n)
+        loss_value.backward()
+        optimizer.step()
+
+        running_loss += loss_value.item()
+
+        if batch % 99 == 1:
+            print(f"batch: {batch}/{len(train_loader)}, loss: {loss_value.item()}")
+
+    return running_loss / len(train_loader)
+
+
+def evaluation(
+        model: nn.Module,
+        val_loader: DataLoader,
+        params: Dict
+):
+    device = params["device"]
+    l1 = params["l1"]
+    l2 = params["l2"]
+    l3 = params["l3"]
+
+    model.to(device)
+    loss_fn = DecompositionLoss(l1=l1, l2=l2, l3=l3).to(device)
+    model.eval()
+
+    running_loss = 0
+    with torch.no_grad():
+        for batch, input_ in enumerate(val_loader):
+            input_ = input_.to(device)
+
+            # z = x + n
+            z_hat, x, n = model(input_)
+            loss_value = loss_fn(z_hat=z_hat, z=input_, x=x, n=n)
+
+            running_loss += loss_value.item()
+
+    val_loss = running_loss/len(val_loader)
+    print(f"validation loss: {val_loss}")
+
+    return val_loss
+
+# if __name__ == "__main__":
+#     x = torch.randn(10, 1, 10)
+#     n = torch.randn(10, 1, 10)
+#     z = torch.randn(10, 1, 10)
+#     z_hat = torch.randn(10, 1, 10)
+#     loss = DecompositionLoss()
+#     print(loss(z_hat=z_hat, z=z, x=x, n=n))
