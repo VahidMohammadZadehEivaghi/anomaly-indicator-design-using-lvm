@@ -13,8 +13,8 @@ class DecompositionLoss(nn.Module):
 
     @staticmethod
     def correlation_coefficient(z1: torch.Tensor, z2: torch.Tensor) -> torch.Tensor:
-        z1 = z1 - torch.mean(z1, dim=2)
-        z2 = z2 - torch.mean(z2, dim=2)
+        z1 = z1 - torch.mean(z1, dim=1)
+        z2 = z2 - torch.mean(z2, dim=1)
         corr_ = torch.sum(z1 * z2) / (torch.sqrt(torch.sum(z1 ** 2)) * torch.sqrt(torch.sum(z2 ** 2)) + 1e-6)
         return corr_
 
@@ -29,7 +29,7 @@ class DecompositionLoss(nn.Module):
         return (energy_z1 - energy_z2) ** 2
 
     def forward(self, z_hat: torch.Tensor, z: torch.Tensor, x: torch.Tensor, n: torch.Tensor) -> torch.Tensor:
-        total_embedding = torch.cat((x, n), dim=2)
+        total_embedding = torch.cat((x, n), dim=1)
 
         reconstruction_error = DecompositionLoss.reconstruction_error(z, z_hat)
         correlation_coefficient = DecompositionLoss.correlation_coefficient(x, n)
