@@ -33,10 +33,10 @@ class DecompositionLoss(nn.Module):
 
         reconstruction_error = DecompositionLoss.reconstruction_error(z, z_hat)
         correlation_coefficient = DecompositionLoss.correlation_coefficient(x, n)
-        energy_preservation = DecompositionLoss.energy_preservation(z, total_embedding)
+        # energy_preservation = DecompositionLoss.energy_preservation(z, total_embedding)
 
         loss = self.l1 * reconstruction_error + \
-               self.l2 * correlation_coefficient 
+               self.l2 * correlation_coefficient
                # self.l3 * energy_preservation
 
         return loss
