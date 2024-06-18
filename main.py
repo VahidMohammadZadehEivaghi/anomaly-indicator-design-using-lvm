@@ -15,29 +15,27 @@ if __name__ == "__main__":
     batch_size = 16
 
     samples = 1000 * batch_size
-    train_data = 2 + 0.1 * torch.randn((samples, input_dim), device=device) + \
-        torch.randn((samples, input_dim), device=device)
-    val_data = 2 + 0.1 * torch.randn((int(samples/100), input_dim), device=device) + \
-        torch.randn((int(samples/100), input_dim), device=device)
+    train_data = 2 + torch.randn((samples, input_dim), device=device)
+    val_data = 2 + torch.randn((int(samples/100), input_dim), device=device)
 
     train_loader = DataLoader(train_data, batch_size=batch_size)
     val_loader = DataLoader(val_data, batch_size=batch_size)
 
     params = {
         "input_dim": input_dim,
-        "batch_size": 16,
+        "batch_size": batch_size,
         "x_m": 2,
-        "x_s": 0.1,
-        "n_m": 0,
-        "n_s": 1,
-        "lr": 0.0001,
+        "x_s": 1,
+        "lr": 0.001,
         "epochs": 100,
         "l1": 1,
         "l2": 1,
         "l3": 1,
         "l4": 1,
-        "device": device
+        "device": str(device)
     }
+    with open("params.json", "w") as p:
+        json.dump(params, p, indent=4)
 
     structure_opt = partial(
         objective,
@@ -57,7 +55,7 @@ if __name__ == "__main__":
         "values": optimum_trial.values
     }
     with open("hyp_opt_result.json", "w") as re:
-        json.dump(hyp_opt_result, re)
+        json.dump(hyp_opt_result, re, indent=4)
 
 
 

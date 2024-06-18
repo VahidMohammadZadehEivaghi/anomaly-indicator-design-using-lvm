@@ -63,7 +63,7 @@ def train_for_one_epoch(
 
     model.to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
-    loss_fn = DecompositionLoss(l1=l1, l2=l2, l3=l3).to(device)
+    loss_fn = DecompositionLoss(l1=l1, l2=l2, l3=l3, l4=l4).to(device)
     running_loss = 0
     model.train()
     for batch, input_ in enumerate(train_loader):
@@ -96,7 +96,7 @@ def evaluation(
     l4 = params["l4"]
 
     model.to(device)
-    loss_fn = DecompositionLoss(l1=l1, l2=l2, l3=l3).to(device)
+    loss_fn = DecompositionLoss(l1=l1, l2=l2, l3=l3, l4=l4).to(device)
     model.eval()
 
     running_loss = 0
