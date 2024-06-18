@@ -13,9 +13,9 @@ if __name__ == "__main__":
     batch_size = 16
     print_every = 10
     samples = 1000 * batch_size
-    train_data = 2 + 0.001 * torch.randn((samples, input_dim), device=device) + \
+    train_data = 2 + 0.1 * torch.randn((samples, input_dim), device=device) + \
         torch.randn((samples, input_dim), device=device)
-    val_data = 2 + 0.001 * torch.randn((int(samples/100), input_dim), device=device) + \
+    val_data = 2 + 0.1 * torch.randn((int(samples/100), input_dim), device=device) + \
         torch.randn((int(samples/100), input_dim), device=device)
 
     train_loader = DataLoader(train_data, batch_size=batch_size)
@@ -23,10 +23,11 @@ if __name__ == "__main__":
 
     params = {
         "lr": 0.0001,
-        "epochs": 10,
+        "epochs": 100,
         "l1": 1,
         "l2": 1,
         "l3": 1,
+        "l4": 1,
         "device": torch.device("cuda" if torch.cuda.is_available() else "cpu")
     }
 
@@ -39,7 +40,7 @@ if __name__ == "__main__":
     )
 
     study = optuna.create_study(directions=["minimize", "minimize"])
-    study.optimize(structure_opt, n_trials=100)
+    study.optimize(structure_opt, n_trials=2)
 
 
 
