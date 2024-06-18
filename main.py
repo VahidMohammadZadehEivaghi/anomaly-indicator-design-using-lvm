@@ -26,12 +26,12 @@ if __name__ == "__main__":
         "batch_size": batch_size,
         "x_m": 2,
         "x_s": 1,
-        "lr": 0.001,
-        "epochs": 100,
-        "l1": 1,
-        "l2": 1,
-        "l3": 1,
-        "l4": 1,
+        "lr": 0.0001,
+        "epochs": 1,
+        "l1": 0.5,
+        "l2": 0.25,
+        "l3": 0.125,
+        "l4": 0.125,
         "device": str(device)
     }
     with open("params.json", "w") as p:
