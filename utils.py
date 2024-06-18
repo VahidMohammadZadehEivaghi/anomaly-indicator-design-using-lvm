@@ -5,11 +5,12 @@ from typing import Dict
 
 
 class DecompositionLoss(nn.Module):
-    def __init__(self, l1: int = 1, l2: int = 1, l3: int = 1):
+    def __init__(self, l1: int = 1, l2: int = 1, l3: int = 1, l4: int = 1):
         super(DecompositionLoss, self).__init__()
         self.l1 = l1
         self.l2 = l2
         self.l3 = l3
+        self.l4 = l4
 
     @staticmethod
     def correlation_coefficient(z1: torch.Tensor, z2: torch.Tensor) -> torch.Tensor:
@@ -28,16 +29,22 @@ class DecompositionLoss(nn.Module):
         energy_z2 = torch.norm(torch.linalg.svdvals(z2), p=2)**2
         return (energy_z1 - energy_z2) ** 2
 
+    @staticmethod
+    def log_of_singular_values(input_: torch.Tensor) -> torch.Tensor:
+        singular_values = torch.linalg.svdvals(input_)
+        return torch.sum(1 + torch.log(singular_values ** 2))
+
     def forward(self, z_hat: torch.Tensor, z: torch.Tensor, x: torch.Tensor, n: torch.Tensor) -> torch.Tensor:
         total_embedding = torch.cat((x, n), dim=1)
 
         reconstruction_error = DecompositionLoss.reconstruction_error(z, z_hat)
         correlation_coefficient = DecompositionLoss.correlation_coefficient(x, n)
-        # energy_preservation = DecompositionLoss.energy_preservation(z, total_embedding)
-
+        energy_preservation = DecompositionLoss.energy_preservation(z, total_embedding)
+        singular_values = DecompositionLoss.log_of_singular_values(x)
         loss = self.l1 * reconstruction_error + \
-               self.l2 * correlation_coefficient
-               # self.l3 * energy_preservation
+            self.l2 * correlation_coefficient + \
+            self.l3 * energy_preservation + \
+            self.l4 * singular_values
 
         return loss
 
@@ -52,6 +59,7 @@ def train_for_one_epoch(
     l1 = params["l1"]
     l2 = params["l2"]
     l3 = params["l3"]
+    l4 = params["l4"]
 
     model.to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
@@ -85,6 +93,7 @@ def evaluation(
     l1 = params["l1"]
     l2 = params["l2"]
     l3 = params["l3"]
+    l4 = params["l4"]
 
     model.to(device)
     loss_fn = DecompositionLoss(l1=l1, l2=l2, l3=l3).to(device)
@@ -105,11 +114,3 @@ def evaluation(
     print(f"validation loss: {val_loss}")
 
     return val_loss
-
-# if __name__ == "__main__":
-#     x = torch.randn(10, 1, 10)
-#     n = torch.randn(10, 1, 10)
-#     z = torch.randn(10, 1, 10)
-#     z_hat = torch.randn(10, 1, 10)
-#     loss = DecompositionLoss()
-#     print(loss(z_hat=z_hat, z=z, x=x, n=n))
