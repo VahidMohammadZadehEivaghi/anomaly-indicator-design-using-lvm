@@ -25,14 +25,14 @@ class DecompositionLoss(nn.Module):
 
     @staticmethod
     def energy_preservation(z1: torch.Tensor, z2: torch.Tensor) -> torch.Tensor:
-        energy_z1 = torch.norm(torch.linalg.svdvals(z1), p=2)**2
-        energy_z2 = torch.norm(torch.linalg.svdvals(z2), p=2)**2
+        energy_z1 = torch.sum(torch.linalg.svdvals(z1) ** 2)
+        energy_z2 = torch.sum(torch.linalg.svdvals(z2) ** 2)
         return (energy_z1 - energy_z2) ** 2
 
     @staticmethod
     def log_of_singular_values(input_: torch.Tensor) -> torch.Tensor:
         singular_values = torch.linalg.svdvals(input_)
-        return torch.sum(1 + torch.log(singular_values ** 2))
+        return torch.norm(singular_values, p=1)
 
     def forward(self, z_hat: torch.Tensor, z: torch.Tensor, x: torch.Tensor, n: torch.Tensor) -> torch.Tensor:
         total_embedding = torch.cat((x, n), dim=1)
