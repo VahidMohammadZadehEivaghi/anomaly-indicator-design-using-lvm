@@ -8,6 +8,10 @@ if __name__ == "__main__":
 
     import json
 
+    import mlflow
+
+    import os
+
     input_dim = 16
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     epochs = 100
@@ -27,39 +31,40 @@ if __name__ == "__main__":
         "x_m": 2,
         "x_s": 1,
         "lr": 0.0001,
-        "epochs": 1,
+        "epochs": 10,
         "l1": 0.5,
         "l2": 0.25,
         "l3": 0.125,
         "l4": 0.125,
         "device": str(device)
     }
-    with open("params.json", "w") as p:
-        json.dump(params, p, indent=4)
 
-    structure_opt = partial(
-        objective,
-        n_input=input_dim,
-        train_loader=train_loader,
-        val_loader=val_loader,
-        params=params
-    )
+    tracking_uri = "http://127.0.0.1:5000"
+    os.environ["MLFLOW_TRACKING_URI"] = tracking_uri
+    mlflow.set_tracking_uri(tracking_uri)
+    mlflow.set_experiment("factorized-LVM")
+    with mlflow.start_run(run_name="Structure-optimization-for-factorized-LVM"):
 
-    study = optuna.create_study(directions=["minimize", "minimize"])
-    study.optimize(structure_opt, n_trials=2)
+        mlflow.log_params(params)
 
-    optimum_trial = max(study.best_trials, key=lambda t: t.values[1])
-    hyp_opt_result = {
-        "number": optimum_trial.number,
-        "params": optimum_trial.params,
-        "values": optimum_trial.values
-    }
-    with open("hyp_opt_result.json", "w") as re:
-        json.dump(hyp_opt_result, re, indent=4)
+        study = optuna.create_study(directions=["minimize", "minimize"])
+        study.optimize(
+            partial(
+                objective,
+                n_input=input_dim,
+                train_loader=train_loader,
+                val_loader=val_loader,
+                params=params
+            ),
+            n_trials=100)
 
+        optimum_trial = max(study.best_trials, key=lambda t: t.values[1])
+        hyp_opt_result = {
+            "number": optimum_trial.number,
+            "params": optimum_trial.params,
+            "values": optimum_trial.values
+        }
+        with open("hyp_opt_result.json", "w") as re:
+            json.dump(hyp_opt_result, re, indent=4)
 
-
-
-
-
-
+        mlflow.log_artifact("hyp_opt_result.json")
