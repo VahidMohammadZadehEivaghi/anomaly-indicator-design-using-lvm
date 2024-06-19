@@ -61,10 +61,11 @@ class DecompositionLoss(nn.Module):
 
         n = tdist.Normal.rsample(noise_dist)
 
-        # total_embedding = torch.cat((x, n), dim=1)
+        total_embedding = torch.cat((x, n), dim=1)
 
         log_likelihood = DecompositionLoss.log_likelihood(out, out_dist)
         cosine_similarity = torch.sum(cos(x, n))
+        energy_preservation = DecompositionLoss.energy_preservation(out, total_embedding)
         singular_values = DecompositionLoss.log_of_singular_values(x)
         kl_term = DecompositionLoss.kld_gauss(noise_mean,
                                               noise_log_var,
@@ -72,6 +73,7 @@ class DecompositionLoss(nn.Module):
                                               torch.zeros_like(noise_mean))
         loss = -self.l1 * log_likelihood + \
             self.l2 * cosine_similarity + \
+            self.l3 * energy_preservation + \
             self.l4 * singular_values + \
             self.l5 * kl_term
 
