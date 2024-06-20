@@ -1,5 +1,4 @@
 from torch import nn
-import torch.distributions as tdist
 import torch
 from typing import Tuple
 
@@ -57,19 +56,19 @@ class Decomposition(nn.Module):
     def forward(self, input_: torch.Tensor) -> Tuple[torch.Tensor, ...]:
         torch.manual_seed(42)
 
-        # z = x + n
+        # out = x + n
         x = self.deterministic_part(input_)
         mean_of_noise, log_var_of_noise = self.stochastic_part(input_)
-        dist_of_noise = tdist.Normal(mean_of_noise, log_var_of_noise.exp().sqrt())
-        n = tdist.Normal.rsample(dist_of_noise)
-        z_hat = x + n
-        return z_hat, x, n
+        out_mean = x + mean_of_noise
+        out_var = log_var_of_noise
+
+        return out_mean, out_var, mean_of_noise, log_var_of_noise, x
 
 
-if __name__ == "__main__":
-    f_shape = (10, 100, 20)
-    n_extractor_shape = (10, 50, 20)
-    model = Decomposition(f_shape, n_extractor_shape)
-    x = torch.rand(10, 1, 10)
-    y, z, _ = model(x)
-    print(z.shape)
+# if __name__ == "__main__":
+#     f_shape = (10, 100, 20)
+#     n_extractor_shape = (10, 50, 20)
+#     model = Decomposition(f_shape, n_extractor_shape)
+#     x = torch.rand(10, 1, 10)
+#     out_mean, out_var, mean_of_noise, log_var_of_noise, x = model(x)
+#     print(model)
