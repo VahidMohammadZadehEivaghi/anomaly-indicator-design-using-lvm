@@ -54,12 +54,11 @@ class Decomposition(nn.Module):
         self.stochastic_part = NoiseExtractor(noise_extractor_shape)
 
     def forward(self, input_: torch.Tensor) -> Tuple[torch.Tensor, ...]:
-        torch.manual_seed(42)
 
         # out = x + n
         x = self.deterministic_part(input_)
         mean_of_noise, log_var_of_noise = self.stochastic_part(input_)
-        out_mean = x
+        out_mean = x + mean_of_noise
         out_var = log_var_of_noise
 
         return out_mean, out_var, mean_of_noise, log_var_of_noise, x
